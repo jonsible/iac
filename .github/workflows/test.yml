@@ -1,4 +1,5 @@
-on: push
+name: Dump Context
+on: workflow_dispatch
 
 jobs:
   one:

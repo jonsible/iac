@@ -55,12 +55,18 @@ jobs:
             ```sh
             ansible-galaxy collection install ${{ github.repository_owner }}.${{ github.event.repository.name }}
             # or
-            ansible-galaxy collection install ${{ github.repositoryUrl }}
+            ansible-galaxy collection install git+${{ github.event.repository.html_url }}.git
             ```
             The requirements.yml needs to have the following format and content:
             ```yaml
             collections:
-                - ${{ github.repositoryUrl }}
+                - ${{ github.repository_owner }}.${{ github.event.repository.name }}
+            ```
+            or
+            ```yaml
+            collections:
+                - name: ${{ github.event.repository.html_url }}.git
+                  type: git
             ```
 
       - name: Deploy Ansible collection to Galaxy
