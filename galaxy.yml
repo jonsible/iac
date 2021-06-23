@@ -1,0 +1,10 @@
+namespace: "jonsible"
+name: "iac"
+description: "Collection to manage my infrastructure"
+version: "0.0.1"
+readme: "README.md"
+authors:
+  - "Jonathan Scherrer <jonathan.s.scherrer@gmail.com"
+license:
+  - "MIT"
+repository: "https://github.com/jonsible/iac"
