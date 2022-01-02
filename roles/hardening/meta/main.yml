@@ -1,0 +1,15 @@
+galaxy_info:
+  author: Jonathan Scherrer
+  description: Server hardening
+  license: GPL-3.0-only
+
+  min_ansible_version: 2.1
+
+  platforms:
+  - name: Ubuntu
+    versions:
+    - focal
+
+  galaxy_tags: []
+
+dependencies: []

@@ -1,0 +1,35 @@
+*filter
+:INPUT DROP
+:OUTPUT ACCEPT
+:FORWARD ACCEPT
+
+-F fw-input
+-F fw-output
+-F fw-forward
+
+# Loopback
+-A fw-input -i lo -j ACCEPT -m comment --comment "Loopback"
+-A fw-output -o lo -j ACCEPT -m comment --comment "Loopback"
+
+# ICMP
+-A fw-output -p icmp -j ACCEPT -m comment --comment "ICMP"
+-A fw-input  -p icmp  -j ACCEPT -m comment --comment "ICMP"
+
+# Established incoming connections
+-A fw-input -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT -m comment --comment "Established incoming connections"
+
+# Established outgoing connections
+-A fw-output -m conntrack --ctstate ESTABLISHED -j ACCEPT -m comment --comment "Established outgoing connections"
+
+{% for item in iptables.v4.inbound %}
+# {{ item.name }}
+-A fw-input -p {{ item.proto }} --dport {{ item.port }} -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT -m comment --comment "{{ item.name }}"
+-A fw-output -p {{ item.proto }} --sport {{ item.port }} -m conntrack --ctstate ESTABLISHED -j ACCEPT -m comment --comment "{{ item.name }}"
+{% endfor %}
+{% for item in iptables.v4.outbound %}
+# {{ item.name }}
+-A fw-output -p {{ item.proto }} --dport {{ item.port }} -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT -m comment --comment "{{ item.name }}"
+-A fw-input -p {{ item.proto }} --sport {{ item.port }} -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT -m comment --comment "{{ item.name }}"
+{% endfor %}
+
+COMMIT
