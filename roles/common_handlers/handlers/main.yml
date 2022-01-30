@@ -1,0 +1,21 @@
+---
+# handlers file for hardening
+- name: Save iptables
+  become: true
+  ansible.builtin.command:
+    cmd: "netfilter-persistent save"
+  listen: "save-iptables"
+
+- name: Reload sshd
+  become: true
+  ansible.builtin.systemd:
+    name: sshd
+    state: reloaded
+  listen: "sshd-reload"
+
+- name: Restart fail2ban
+  become: true
+  ansible.builtin.systemd:
+    name: fail2ban
+    state: restarted
+  listen: "fail2ban-restart"

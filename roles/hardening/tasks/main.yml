@@ -1,9 +1,13 @@
 ---
-# tasks file for hardening
-- name: Updating apt cache
+- name: Import common_hanlders
+  ansible.builtin.import_role:
+    name: jonsible.iac.common_handlers
+
+- name: Updating apt cache if older than 24h
   become: true
   ansible.builtin.apt:
     update_cache: true
+    cache_valid_time: 86400
   changed_when: false
 
 - name: Install packages
@@ -12,114 +16,22 @@
     name: "{{ item }}"
     state: present
   loop:
-    - fail2ban
     - iptables
+    - fail2ban
+    - iptables-persistent
 
-- name: Setting all chains to ACCEPT
-  become: true
-  ansible.builtin.iptables:
-    policy: ACCEPT
-    chain: "{{ item }}"
-  loop:
-    - "INPUT"
-    - "FORWARD"
-    - "OUTPUT"
-  changed_when: false
+- name: Setup sshd
+  ansible.builtin.import_tasks: ssh.yml
 
-- name: Disabling ufw
-  become: true
-  ansible.builtin.shell:
-    cmd: ufw disable
-  failed_when: false
-  changed_when: false
+- name: Setup fail2ban
+  ansible.builtin.import_tasks: fail2ban.yml
+  when: machine_type == "bare"
 
-- name: Removing ufw
-  become: true
-  ansible.builtin.apt:
-    name: ufw
-    purge: true
-    autoremove: true
-    state: absent
+- name: Setup iptables
+  ansible.builtin.import_tasks: iptables.yml
 
-- name: Removing ufw chains
-  become: true
-  ansible.builtin.shell:
-    cmd: |
-      for ufw in $(iptables -L | grep 'Chain ufw' | awk '{ print $2 }'); do
-        iptables -F $ufw
-      done
-      for ufw in $(iptables -L | grep 'Chain ufw' | awk '{ print $2 }'); do
-        iptables -D INPUT -j $ufw
-        iptables -D FORWARD -j $ufw
-        iptables -D OUTPUT -j $ufw
-      done
-      for ufw in $(iptables -L | grep 'Chain ufw' | awk '{ print $2 }'); do
-        iptables -X $ufw
-      done
-      for ufw in $(ip6tables -L | grep 'Chain ufw' | awk '{ print $2 }'); do
-        ip6tables -F $ufw
-      done
-      for ufw in $(ip6tables -L | grep 'Chain ufw' | awk '{ print $2 }'); do
-        ip6tables -D INPUT -j $ufw
-        ip6tables -D FORWARD -j $ufw
-        ip6tables -D OUTPUT -j $ufw
-      done
-      for ufw in $(ip6tables -L | grep 'Chain ufw' | awk '{ print $2 }'); do
-        ip6tables -X $ufw
-      done
-  changed_when: false
 
-- name: Creating iptables config folder
-  become: true
-  ansible.builtin.file:
-    path: /etc/iptables/conf.d
-    state: directory
-    recurse: true
 
-- name: Adding iptables rules
-  become: true
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: /etc/iptables/{{ item.dst }}
-    owner: root
-    group: root
-    mode: 0644
-  loop:
-    - src: "templates/rules.v4.j2"
-      dst: "rules.v4"
-    - src: "templates/rules.v6.j2"
-      dst: "rules.v6"
-  notify: "reload-fw"
 
-- name: Installing fw service
-  become: true
-  ansible.builtin.copy:
-    src: files/fw.service
-    dest: /etc/systemd/system/
-    owner: root
-    group: root
 
-- name: Installing fw script
-  become: true
-  ansible.builtin.copy:
-    src: files/fw
-    dest: /usr/bin/
-    mode: 0700
-    owner: root
-    group: root
 
-- name: Starting fw service
-  become: true
-  ansible.builtin.systemd:
-    name: fw
-    enabled: true
-    daemon_reload: true
-    state: started
-
-- name: Starting fail2ban
-  become: true
-  ansible.builtin.systemd:
-    name: fail2ban
-    enabled: true
-    daemon_reload: true
-    state: started

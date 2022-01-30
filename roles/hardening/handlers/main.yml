@@ -1,8 +1,0 @@
----
-# handlers file for hardening
-- name: Reload fw
-  become: true
-  ansible.builtin.systemd:
-    name: fw
-    state: restarted
-  listen: "reload-fw"

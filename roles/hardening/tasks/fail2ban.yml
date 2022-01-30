@@ -1,0 +1,16 @@
+- name: Starting fail2ban
+  become: true
+  ansible.builtin.systemd:
+    name: fail2ban
+    enabled: true
+    daemon_reload: true
+    state: started
+
+- name: Setup default config
+  become: true
+  ansible.builtin.copy:
+    src: files/defaults.conf
+    dest: /etc/fail2ban/jail.d/defaults.conf
+    mode: 0644
+  notify:
+    - "fail2ban-restart"

@@ -1,0 +1,88 @@
+- name: Setting all iptables chains to ACCEPT
+  become: true
+  ansible.builtin.iptables:
+    policy: ACCEPT
+    chain: "{{ item }}"
+  loop:
+    - "INPUT"
+    - "FORWARD"
+    - "OUTPUT"
+  changed_when: false
+
+- name: Removing ufw
+  become: true
+  ansible.builtin.apt:
+    name: ufw
+    purge: true
+    autoremove: true
+    state: absent
+
+- name: Allowing ssh
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: INPUT
+    protocol: tcp
+    destination_port: "22"
+    jump: ACCEPT
+    comment: "SSH port"
+  notify:
+    - "save-iptables"
+
+- name: Allowing icmp
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: "{{ item }}"
+    protocol: icmp
+    jump: ACCEPT
+    comment: "ICMP"
+  loop:
+    - INPUT
+    - OUTPUT
+  notify:
+    - "save-iptables"
+
+- name: Allowing loopback (in)
+  become: true
+  ansible.builtin.iptables:
+    chain: INPUT
+    in_interface: lo
+    jump: ACCEPT
+    comment: "Loopback"
+  notify:
+    - "save-iptables"
+
+- name: Allowing loopback (out)
+  become: true
+  ansible.builtin.iptables:
+    chain: OUTPUT
+    out_interface: lo
+    jump: ACCEPT
+    comment: "Loopback"
+  notify:
+    - "save-iptables"
+
+- name: Allow related and established connections
+  become: true
+  ansible.builtin.iptables:
+    chain: INPUT
+    ctstate: ESTABLISHED,RELATED
+    jump: ACCEPT
+  notify:
+    - "save-iptables"
+
+# - name: Enabling netfilter-persistent
+#   become: true
+#   ansible.builtin.systemd:
+#     name: iptables
+#     enabled: true
+#     daemon_reload: true
+
+- name: Setting INPUT chain policy to DROP
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    policy: DROP
+    chain: INPUT
+  changed_when: false

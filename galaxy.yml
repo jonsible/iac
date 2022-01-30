@@ -4,7 +4,7 @@ description: "Collection to manage my infrastructure"
 version: 0.0.1
 readme: README.md
 authors:
-  - "Jonathan Scherrer <jonathan.s.scherrer@gmail.com"
+  - "Jonathan Scherrer <jonathan.s.scherrer@gmail.com>"
 license_file: 'LICENSE'
 repository: https://github.com/jonsible/iac
 issues: https://github.com/jonsible/iac/issues

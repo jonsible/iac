@@ -1,0 +1,25 @@
+- hosts: all
+  remote_user: "{{ bootstrap_user }}"
+  gather_facts: false
+  pre_tasks:
+    - name: Check if server has been bootstrapped
+      block:
+        - name: Waiting for connection
+          wait_for_connection:
+            timeout: 2
+      rescue:
+        - name: Clear Host errors
+          meta: clear_host_errors
+        - name: End host
+          meta: end_host
+  tasks:
+    - name: Bootstrap the server
+      ansible.builtin.import_role:
+        name: jonsible.iac.bootstrap
+        tasks_from: user.yml
+
+- hosts: all
+  tasks:
+    - name: Bootstrap the server
+      ansible.builtin.import_role:
+        name: jonsible.iac.bootstrap

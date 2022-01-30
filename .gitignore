@@ -1,2 +1,4 @@
 *.retry
 old
+
+ansible_collections

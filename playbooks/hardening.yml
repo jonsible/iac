@@ -1,0 +1,26 @@
+# - hosts: all
+#   tasks:
+#     - name: Flush
+#       become: true
+#       ansible.builtin.iptables:
+#         table: filter
+#         chain: INPUT
+#         flush: yes
+
+    # - name: Test iptables
+    #   become: true
+    #   ansible.builtin.iptables:
+    #     chain: INPUT
+    #     protocol: tcp
+    #     destination_port: "{{ item }}"
+    #     jump: ACCEPT
+    #   loop:
+    #     - "22"
+    #     - "80"
+    #     - "443"
+
+- hosts: all
+  tasks:
+    - name: Bootstrap the server
+      ansible.builtin.import_role:
+        name: jonsible.iac.hardening

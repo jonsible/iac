@@ -1,0 +1,29 @@
+- name: Check if default_user and github_user are set
+  assert:
+    that:
+      - default_user | length > 0
+      - github_user | length > 0
+
+- name: Creating default user
+  become: true
+  ansible.builtin.user:
+    name: "{{ default_user }}"
+    shell: /usr/bin/bash
+    groups: sudo
+    append: true
+
+- name: Setting passwordless sudo for default user
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/{{ default_user }}
+    line: "{{ default_user }} ALL=(ALL) NOPASSWD: ALL"
+    state: present
+    mode: 0700
+    create: true
+
+- name: Set authorized keys taken from url
+  become: true
+  ansible.posix.authorized_key:
+    user: "{{ default_user }}"
+    state: present
+    key: https://github.com/{{ github_user }}.keys
