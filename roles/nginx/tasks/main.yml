@@ -1,0 +1,46 @@
+---
+# tasks file for nginx
+
+- name: Import common_hanlders
+  ansible.builtin.import_role:
+    name: jonsible.iac.common_handlers
+
+- name: Installing packages
+  become: true
+  ansible.builtin.apt:
+    pkg:
+      - nginx
+      - certbot
+      - python3-certbot-nginx
+
+- name: Installing nginx site (auth)
+  ansible.builtin.include_tasks: auth.yml
+  when: nginx_auth_user is defined and nginx_auth_pass is defined
+
+- name: Installing nginx site (bare)
+  ansible.builtin.include_tasks: bare.yml
+  when: nginx_auth_user is not defined or nginx_auth_pass is not defined
+
+- name: Link default nginx site
+  become: true
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+
+- name: Stat default cert
+  become: true
+  ansible.builtin.stat:
+    path: /etc/letsencrypt/live/{{ letsencrypt_host }}/fullchain.pem
+  register: fullchain_default
+
+- name: Generate default cert
+  ansible.builtin.command:
+    cmd: sudo certbot certonly --agree-tos --email jonathan.s.scherrer@gmail.com -n --nginx --domains {{ letsencrypt_host }}
+  when: not fullchain_default.stat.exists
+
+- name: Renew certs
+  ansible.builtin.command:
+    cmd: sudo certbot renew
+  register: certbot_renew
+  changed_when: certbot_renew.rc != 0

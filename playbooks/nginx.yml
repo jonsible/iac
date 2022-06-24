@@ -1,0 +1,5 @@
+- hosts: all
+  tasks:
+    - name: Importing nginx role
+      ansible.builtin.import_role:
+        name: jonsible.iac.nginx

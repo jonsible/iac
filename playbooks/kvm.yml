@@ -1,0 +1,5 @@
+- hosts: kvm
+  tasks:
+    - name: Importing kvm role
+      ansible.builtin.import_role:
+        name: jonsible.iac.kvm

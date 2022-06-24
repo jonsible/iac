@@ -1,0 +1,28 @@
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name _;
+        return 301 https://$host$request_uri;
+}
+
+server {
+        listen 443 ssl default_server;
+        listen [::]:443 ssl default_server;
+
+        server_name {{ letsencrypt_host }};
+        ssl_certificate /etc/letsencrypt/live/{{ letsencrypt_host }}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/{{ letsencrypt_host }}/privkey.pem;
+
+        gzip off;
+
+        root /var/www/html;
+
+        # Add index.php to the list if you are using PHP
+        index index.html index.htm index.nginx-debian.html;
+
+        location / {
+                auth_basic "Protected";
+                auth_basic_user_file {{ nginx_auth_path }};
+                try_files $uri $uri/ =404;
+        }
+}

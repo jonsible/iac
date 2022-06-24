@@ -27,7 +27,7 @@
     jump: ACCEPT
     comment: "SSH port"
   notify:
-    - "save-iptables"
+    - "iptables-save"
 
 - name: Allowing icmp
   become: true
@@ -41,7 +41,7 @@
     - INPUT
     - OUTPUT
   notify:
-    - "save-iptables"
+    - "iptables-save"
 
 - name: Allowing loopback (in)
   become: true
@@ -51,7 +51,7 @@
     jump: ACCEPT
     comment: "Loopback"
   notify:
-    - "save-iptables"
+    - "iptables-save"
 
 - name: Allowing loopback (out)
   become: true
@@ -61,7 +61,7 @@
     jump: ACCEPT
     comment: "Loopback"
   notify:
-    - "save-iptables"
+    - "iptables-save"
 
 - name: Allow related and established connections
   become: true
@@ -70,14 +70,28 @@
     ctstate: ESTABLISHED,RELATED
     jump: ACCEPT
   notify:
-    - "save-iptables"
+    - "iptables-save"
 
-# - name: Enabling netfilter-persistent
-#   become: true
-#   ansible.builtin.systemd:
-#     name: iptables
-#     enabled: true
-#     daemon_reload: true
+- name: Allow extra
+  become: true
+  ansible.builtin.iptables: 
+    table: "{{ item.table }}"
+    chain: "{{ item.chain }}"
+    protocol: "{{ item.protocol }}"
+    destination_port: "{{ item.destination_port }}"
+    jump: "{{ item.jump }}"
+    comment: "{{ item.comment }}"
+  loop: "{{ iptables_extra }}"
+  when: iptables_extra is defined
+  notify:
+    - "iptables-save"
+
+- name: Enabling netfilter-persistent
+  become: true
+  ansible.builtin.systemd:
+    name: iptables
+    enabled: true
+    daemon_reload: true
 
 - name: Setting INPUT chain policy to DROP
   become: true
@@ -85,4 +99,3 @@
     table: filter
     policy: DROP
     chain: INPUT
-  changed_when: false

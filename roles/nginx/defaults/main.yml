@@ -1,0 +1,4 @@
+---
+# nginx_auth_user: <user>
+# nginx_auth_pass: <pass>
+nginx_auth_path: /etc/nginx/.htpasswd

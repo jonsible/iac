@@ -1,0 +1,22 @@
+- name: Installing passlib
+  become: true
+  ansible.builtin.apt:
+    pkg: python3-passlib
+
+- name: Create nginx credentials
+  become: true
+  community.general.htpasswd:
+    path: "{{ nginx_auth_path }}"
+    name: "{{ nginx_auth_user }}"
+    password: "{{ nginx_auth_pass }}"
+    owner: root
+    group: www-data
+    mode: 0640
+
+- name: Installing default nginx site
+  become: true
+  ansible.builtin.template:
+    src: "default_auth.j2"
+    dest: /etc/nginx/sites-available/default
+    mode: 0644
+  notify: "nginx-reload"

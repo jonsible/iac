@@ -4,7 +4,13 @@
   become: true
   ansible.builtin.command:
     cmd: "netfilter-persistent save"
-  listen: "save-iptables"
+  listen: "iptables-save"
+
+- name: Restart iptables
+  become: true
+  ansible.builtin.command:
+    cmd: "netfilter-persistent restart"
+  listen: "iptables-restart"
 
 - name: Reload sshd
   become: true
@@ -19,3 +25,10 @@
     name: fail2ban
     state: restarted
   listen: "fail2ban-restart"
+
+- name: Reload nginx
+  become: true
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+  listen: "nginx-reload"

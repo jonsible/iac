@@ -1,2 +1,57 @@
 ---
-# tasks file for kvm
+- name: Import common_hanlders
+  ansible.builtin.import_role:
+    name: jonsible.iac.common_handlers
+
+- name: Installing kvm/libvirt
+  become: true
+  ansible.builtin.apt:
+    name:
+      - bridge-utils
+      - cpu-checker
+      - libvirt-clients
+      - libvirt-daemon
+      - libvirt-daemon-system
+      - qemu-kvm
+      - qemu
+
+- name: Install needed libraries
+  become: true
+  ansible.builtin.apt:
+    name:
+      - python3
+      - python3-libvirt
+      - python3-guestfs
+      - python3-lxml
+
+- name: Add current user to libvirt group
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups: ["libvirt"]
+    append: true
+  register: user_libvirt
+
+- name: Reset connection to take group change into action
+  ansible.builtin.meta: reset_connection
+
+- name: Check if KVM acceleration is working
+  ansible.builtin.command:
+    cmd: "kvm-ok"
+  register: kvmok
+  changed_when: false
+  failed_when: kvmok.rc != 0
+
+- name: Start libvirtd
+  become: true
+  ansible.builtin.systemd:
+    name: "libvirtd"
+    enabled: true
+    state: started
+
+- name: Remove default libvirt network
+  community.libvirt.virt_net:
+    name: default
+    state: absent
+  notify:
+    - iptables-restart
