@@ -1,3 +1,9 @@
+- name: Install packages
+  become: true
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+
 - name: Starting fail2ban
   become: true
   ansible.builtin.systemd:

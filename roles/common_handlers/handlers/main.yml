@@ -32,3 +32,9 @@
     name: nginx
     state: reloaded
   listen: "nginx-reload"
+
+- name: Apply netplan
+  become: true
+  ansible.builtin.command:
+    cmd: "netplan apply"
+  listen: "netplan-apply"

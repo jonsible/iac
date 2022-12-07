@@ -1,5 +1,5 @@
 - name: Check if default_user and github_user are set
-  assert:
+  ansible.builtin.assert:
     that:
       - default_user | length > 0
       - github_user | length > 0

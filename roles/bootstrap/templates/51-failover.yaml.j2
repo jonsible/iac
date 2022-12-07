@@ -1,0 +1,7 @@
+network:
+  ethernets:
+    {{ ansible_facts['default_ipv4']['interface'] }}:
+      addresses:
+      - {{ failover }}/32
+      match:
+        macaddress: {{ ansible_facts['default_ipv4']['macaddress'] }}

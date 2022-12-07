@@ -17,7 +17,6 @@
     state: present
   loop:
     - iptables
-    - fail2ban
     - iptables-persistent
 
 - name: Setup sshd

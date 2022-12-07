@@ -1,8 +1,12 @@
+- name: Import common_hanlders
+  ansible.builtin.import_role:
+    name: jonsible.iac.common_handlers
+
 - name: Setup user
   ansible.builtin.import_tasks: user.yml
 
 - name: Check if machine_type is set
-  assert:
+  ansible.builtin.assert:
     that:
       - machine_type | length > 0
 
@@ -41,7 +45,7 @@
 - name: Updating apt cache if older than 24h
   become: true
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 86400
 
 - name: Installing packages
@@ -58,3 +62,29 @@
   loop:
     - qemu-guest-agent
   when: machine_type == "virtual"
+
+- name: Setting up failover IP
+  become: true
+  ansible.builtin.template:
+    src: 51-failover.yaml.j2
+    dest: /etc/netplan/51-failover.yaml
+    mode: 0644
+    owner: root
+    group: root
+  when: failover is defined
+  notify: "netplan-apply"
+
+- name: Disabling cloud-init's network config
+  become: true
+  ansible.builtin.copy:
+    src: 99-disable-network-config.cfg
+    dest: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+    mode: 0644
+  when: failover is defined
+
+- name: Apply netplan
+  become: true
+  ansible.builtin.command:
+    cmd: "netplan apply"
+  register: np
+  changed_when: false
