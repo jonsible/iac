@@ -1,0 +1,58 @@
+# code: language=ansible
+- name: Allow kube API (wireguard)
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: INPUT
+    in_interface: "{{ wg_if }}"
+    source: "{{ wg_network }}"
+    protocol: tcp
+    destination_port: "6443"
+    jump: ACCEPT
+    comment: "kube API server"
+    action: insert
+  notify:
+    - "iptables-save"
+
+- name: Allow etcd (wireguard)
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: INPUT
+    in_interface: "{{ wg_if }}"
+    source: "{{ wg_network }}"
+    protocol: tcp
+    destination_port: "2379:2380"
+    jump: ACCEPT
+    comment: "etcd"
+    action: insert
+  notify:
+    - "iptables-save"
+
+- name: Allow kubelet metrics (wireguard)
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: INPUT
+    in_interface: "{{ wg_if }}"
+    source: "{{ wg_network }}"
+    protocol: tcp
+    destination_port: "10250"
+    jump: ACCEPT
+    comment: "kubelet metrics"
+    action: insert
+  notify:
+    - "iptables-save"
+
+- name: Allow flannel wireguard
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: INPUT
+    protocol: udp
+    destination_port: "51820"
+    jump: ACCEPT
+    comment: "Flannel Wireguard"
+    action: insert
+  notify:
+    - "iptables-save"

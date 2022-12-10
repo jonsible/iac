@@ -1,0 +1,113 @@
+# code: language=ansible
+---
+- name: Setting all iptables chains to ACCEPT
+  become: true
+  ansible.builtin.iptables:
+    policy: ACCEPT
+    chain: "{{ item }}"
+    ip_version: "{{ rules_ip_version }}"
+  loop:
+    - "INPUT"
+    - "FORWARD"
+    - "OUTPUT"
+  changed_when: false
+
+- name: Allowing ssh
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: INPUT
+    protocol: tcp
+    destination_port: "22"
+    jump: ACCEPT
+    comment: "SSH port"
+    ip_version: "{{ rules_ip_version }}"
+  notify:
+    - "iptables-save"
+
+- name: Allowing icmp
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: "{{ item }}"
+    protocol: icmp
+    jump: ACCEPT
+    comment: "ICMP"
+    ip_version: "{{ rules_ip_version }}"
+  loop:
+    - INPUT
+    - OUTPUT
+  notify:
+    - "iptables-save"
+  when: rules_ip_version == "ipv4"
+
+- name: Allowing icmpv6
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: "{{ item }}"
+    protocol: icmpv6
+    jump: ACCEPT
+    comment: "ICMPV6"
+    ip_version: "{{ rules_ip_version }}"
+  loop:
+    - INPUT
+    - OUTPUT
+  notify:
+    - "iptables-save"
+  when: rules_ip_version == "ipv6"
+
+- name: Allowing loopback (in)
+  become: true
+  ansible.builtin.iptables:
+    chain: INPUT
+    in_interface: lo
+    jump: ACCEPT
+    comment: "Loopback"
+    ip_version: "{{ rules_ip_version }}"
+  notify:
+    - "iptables-save"
+
+- name: Allowing loopback (out)
+  become: true
+  ansible.builtin.iptables:
+    chain: OUTPUT
+    out_interface: lo
+    jump: ACCEPT
+    comment: "Loopback"
+    ip_version: "{{ rules_ip_version }}"
+  notify:
+    - "iptables-save"
+
+- name: Allow related and established connections
+  become: true
+  ansible.builtin.iptables:
+    chain: INPUT
+    ctstate: ESTABLISHED,RELATED
+    jump: ACCEPT
+    ip_version: "{{ rules_ip_version }}"
+  notify:
+    - "iptables-save"
+
+- name: Allow extra
+  become: true
+  ansible.builtin.iptables:
+    table: "{{ item.table }}"
+    chain: "{{ item.chain }}"
+    protocol: "{{ item.protocol }}"
+    destination_port: "{{ item.destination_port }}"
+    jump: "{{ item.jump }}"
+    comment: "{{ item.comment }}"
+    ip_version: "{{ rules_ip_version }}"
+  loop: "{{ iptables_extra }}"
+  when: iptables_extra is defined
+  notify:
+    - "iptables-save"
+
+- name: Setting INPUT chain policy to DROP
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    policy: DROP
+    chain: INPUT
+    ip_version: "{{ rules_ip_version }}"

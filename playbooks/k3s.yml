@@ -1,0 +1,16 @@
+# code: language=ansible
+
+- name: Setup k3s
+  hosts: k3s
+  tasks:
+    - name: Harden the server
+      ansible.builtin.import_role:
+        name: jonsible.iac.hardening
+
+    - name: Setup wireguard
+      ansible.builtin.import_role:
+        name: jonsible.iac.wireguard
+
+    - name: Setup k3s
+      ansible.builtin.import_role:
+        name: jonsible.iac.k3s

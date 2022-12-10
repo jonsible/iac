@@ -1,5 +1,5 @@
 ---
-# handlers file for hardening
+# code: language=ansible
 - name: Save iptables
   become: true
   ansible.builtin.command:
@@ -38,3 +38,10 @@
   ansible.builtin.command:
     cmd: "netplan apply"
   listen: "netplan-apply"
+
+- name: Restart systemd-networkd
+  become: true
+  ansible.builtin.systemd:
+    name: systemd-networkd
+    state: restarted
+  listen: "systemd-networkd-restart"

@@ -1,0 +1,5 @@
+- hosts: k3s
+  tasks:
+    - name: Setup wireguard
+      ansible.builtin.import_role:
+        name: jonsible.iac.wireguard

@@ -1,14 +1,5 @@
-- name: Setting all iptables chains to ACCEPT
-  become: true
-  ansible.builtin.iptables:
-    policy: ACCEPT
-    chain: "{{ item }}"
-  loop:
-    - "INPUT"
-    - "FORWARD"
-    - "OUTPUT"
-  changed_when: false
-
+# code: language=ansible
+---
 - name: Removing ufw
   become: true
   ansible.builtin.apt:
@@ -17,74 +8,17 @@
     autoremove: true
     state: absent
 
-- name: Allowing ssh
-  become: true
-  ansible.builtin.iptables:
-    table: filter
-    chain: INPUT
-    protocol: tcp
-    destination_port: "22"
-    jump: ACCEPT
-    comment: "SSH port"
-  notify:
-    - "iptables-save"
+- name: Set rules (IPv4)
+  ansible.builtin.include_tasks:
+    file: iptables_rules.yml
+  vars:
+    rules_ip_version: ipv4
 
-- name: Allowing icmp
-  become: true
-  ansible.builtin.iptables:
-    table: filter
-    chain: "{{ item }}"
-    protocol: icmp
-    jump: ACCEPT
-    comment: "ICMP"
-  loop:
-    - INPUT
-    - OUTPUT
-  notify:
-    - "iptables-save"
-
-- name: Allowing loopback (in)
-  become: true
-  ansible.builtin.iptables:
-    chain: INPUT
-    in_interface: lo
-    jump: ACCEPT
-    comment: "Loopback"
-  notify:
-    - "iptables-save"
-
-- name: Allowing loopback (out)
-  become: true
-  ansible.builtin.iptables:
-    chain: OUTPUT
-    out_interface: lo
-    jump: ACCEPT
-    comment: "Loopback"
-  notify:
-    - "iptables-save"
-
-- name: Allow related and established connections
-  become: true
-  ansible.builtin.iptables:
-    chain: INPUT
-    ctstate: ESTABLISHED,RELATED
-    jump: ACCEPT
-  notify:
-    - "iptables-save"
-
-- name: Allow extra
-  become: true
-  ansible.builtin.iptables: 
-    table: "{{ item.table }}"
-    chain: "{{ item.chain }}"
-    protocol: "{{ item.protocol }}"
-    destination_port: "{{ item.destination_port }}"
-    jump: "{{ item.jump }}"
-    comment: "{{ item.comment }}"
-  loop: "{{ iptables_extra }}"
-  when: iptables_extra is defined
-  notify:
-    - "iptables-save"
+- name: Set rules (IPv6)
+  ansible.builtin.include_tasks:
+    file: iptables_rules.yml
+  vars:
+    rules_ip_version: ipv6
 
 - name: Enabling netfilter-persistent
   become: true
@@ -92,10 +26,3 @@
     name: iptables
     enabled: true
     daemon_reload: true
-
-- name: Setting INPUT chain policy to DROP
-  become: true
-  ansible.builtin.iptables:
-    table: filter
-    policy: DROP
-    chain: INPUT

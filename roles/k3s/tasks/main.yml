@@ -1,0 +1,106 @@
+# code: language=ansible
+
+- name: Import common_hanlders
+  ansible.builtin.import_role:
+    name: jonsible.iac.common_handlers
+
+- name: Retrieve k3s_token from environment
+  ansible.builtin.set_fact:
+    k3s_token: "{{ lookup('ansible.builtin.env', 'K3S_TOKEN', default='') }}"
+
+- name: Assert that k3s_token is set
+  ansible.builtin.assert:
+    that:
+      - k3s_token != ""
+    fail_msg: "k3s_token not set"
+
+- name: Set iptables rules
+  ansible.builtin.import_tasks: iptables_rules.yml
+
+- name: Enable IPv4 forwarding
+  become: true
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: true
+
+- name: Install open-iscsi
+  become: true
+  ansible.builtin.apt:
+    name: open-iscsi
+    state: present
+
+- name: Start iscsid
+  become: true
+  ansible.builtin.systemd:
+    name: iscsid
+    state: started
+    enabled: true
+
+- name: Create k3s directory
+  become: true
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Copy k3s config file
+  become: true
+  ansible.builtin.template:
+    src: "config.yaml.j2"
+    dest: "/etc/rancher/k3s/config.yaml"
+    owner: root
+    group: root
+    mode: 0600
+  notify:
+    - "k3s-restart"
+
+- name: Check if k3s is already installed
+  become: true
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/k3s.yaml
+  register: k3s_kubeconfig
+
+- name: Download installer
+  become: true
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /etc/rancher/k3s/install.sh
+    owner: root
+    group: root
+    mode: 0755
+  when: not k3s_kubeconfig.stat.exists
+  register: installer_download
+
+- name: Set init node facts
+  become: true
+  ansible.builtin.set_fact:
+    k3s_init_node: "{{ groups['k3s'][0] }}"
+    k3s_init_node_ip: "{{ hostvars[groups['k3s'][0]]['wg_ipv4'] }}"
+  when: not k3s_kubeconfig.stat.exists
+
+- name: Init cluster
+  become: true
+  ansible.builtin.command:
+    cmd: /etc/rancher/k3s/install.sh server --cluster-init
+  environment:
+    K3S_TOKEN: "{{ k3s_token }}"
+    INSTALL_K3S_CHANNEL: "{{ k3s_channel }}"
+  when:
+    - not k3s_kubeconfig.stat.exists
+    - ansible_nodename == k3s_init_node
+
+- name: Join cluster
+  become: true
+  ansible.builtin.command:
+    cmd: /etc/rancher/k3s/install.sh server
+  environment:
+    K3S_TOKEN: "{{ k3s_token }}"
+    K3S_URL: "https://{{ k3s_init_node_ip }}:6443"
+    INSTALL_K3S_CHANNEL: "{{ k3s_channel }}"
+  when:
+    - not k3s_kubeconfig.stat.exists
+    - ansible_nodename != k3s_init_node

@@ -1,0 +1,13 @@
+kube-apiserver-arg:
+  - oidc-issuer-url={{ oidc_issuer_url }}
+  - oidc-client-id={{ oidc_client_id }}
+  - oidc-username-claim={{ oidc_username_claim }}
+  - "oidc-username-prefix={{ oidc_username_prefix }}"
+  - oidc-groups-claim={{ oidc_groups_claim }}
+  - "oidc-groups-prefix={{ oidc_groups_prefix }}"
+token: "{{ k3s_token }}"
+node-name: "{{ ansible_nodename }}"
+node-ip: "{{ wg_ipv4 }}"
+node-external-ip: "{{ ansible_default_ipv4['address'] }}"
+flannel-backend: "wireguard-native"
+etcd-expose-metrics: true

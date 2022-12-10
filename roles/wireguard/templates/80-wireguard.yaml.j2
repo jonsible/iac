@@ -1,0 +1,22 @@
+network:
+  tunnels:
+    {{ wg_if }}:
+      mode: wireguard
+      addresses:
+        - {{ wg_ipv4 }}/24
+      port: {{ wg_port }}
+      key: {{ wg_private }}
+      peers:
+        {% for peer in k3s_hostvars %}
+        {% if peer.ansible_nodename != ansible_nodename %}
+        - keys:
+            public: {{ peer.wg_public }}
+          allowed-ips:
+            - {{ hostvars[peer.ansible_nodename].wg_ipv4 }}/32
+          endpoint: "{{ peer.ansible_nodename }}:{{ wg_port }}"
+          keepalive: 10
+        {% endif %}
+        {% endfor %}
+        {% for peer in extra_peers %}
+        - {{ peer }}
+        {% endfor %}

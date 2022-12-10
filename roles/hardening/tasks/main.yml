@@ -1,3 +1,4 @@
+# code: language=ansible
 ---
 - name: Import common_hanlders
   ansible.builtin.import_role:
@@ -28,9 +29,3 @@
 
 - name: Setup iptables
   ansible.builtin.import_tasks: iptables.yml
-
-
-
-
-
-

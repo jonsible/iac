@@ -1,3 +1,5 @@
+# code: language=ansible
+---
 - name: Setting sshd_config
   become: true
   ansible.builtin.copy:

@@ -2,3 +2,4 @@
 old
 
 ansible_collections
+__pycache__

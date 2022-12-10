@@ -1,5 +1,6 @@
-- hosts: all
+- name: Harden server
+  hosts: all
   tasks:
-    - name: Bootstrap the server
+    - name: Harden the server
       ansible.builtin.import_role:
         name: jonsible.iac.hardening

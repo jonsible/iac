@@ -1,0 +1,8 @@
+# code: language=ansible
+
+- name: Restart k3s
+  become: true
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+  listen: "k3s-restart"
