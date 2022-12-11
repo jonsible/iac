@@ -84,6 +84,7 @@
 
 - name: Init cluster
   become: true
+  any_errors_fatal: true
   ansible.builtin.command:
     cmd: /etc/rancher/k3s/install.sh server --cluster-init
   environment:
@@ -95,6 +96,7 @@
 
 - name: Join cluster
   become: true
+  any_errors_fatal: true
   ansible.builtin.command:
     cmd: /etc/rancher/k3s/install.sh server
   environment:
