@@ -71,3 +71,6 @@
     comment: "Wireguard port"
   notify:
     - "iptables-save"
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

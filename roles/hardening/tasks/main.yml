@@ -29,3 +29,6 @@
 
 - name: Setup iptables
   ansible.builtin.import_tasks: iptables.yml
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
