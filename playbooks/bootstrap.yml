@@ -1,5 +1,7 @@
 - name: Pre-bootstrap using bootstrap user
   hosts: all
+  vars:
+    ansible_user: "{{ bootstrap_user }}"
   remote_user: "{{ bootstrap_user }}"
   gather_facts: false
   pre_tasks:
