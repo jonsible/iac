@@ -7,7 +7,11 @@ kube-apiserver-arg:
   - "oidc-groups-prefix={{ oidc_groups_prefix }}"
 token: "{{ k3s_token }}"
 node-name: "{{ ansible_nodename }}"
+advertise-address: "{{ wg_ipv4 }}"
+bind-address: "{{ wg_ipv4 }}"
 node-ip: "{{ wg_ipv4 }}"
 node-external-ip: "{{ ansible_default_ipv4['address'] }}"
 flannel-backend: "wireguard-native"
 etcd-expose-metrics: true
+cluster-cidr: "{{ cluster_cidr }}"
+service-cidr: "{{ service_cidr }}"

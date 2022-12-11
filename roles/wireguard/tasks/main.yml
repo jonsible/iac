@@ -1,3 +1,4 @@
+# code: language=ansible
 ---
 - name: Import common_hanlders
   ansible.builtin.import_role:
@@ -44,23 +45,9 @@
     wg_public: "{{ wg_public_b64['content'] | b64decode | trim }}"
     wg_private: "{{ wg_private_b64['content'] | b64decode | trim }}"
 
-- name: Debug
-  ansible.builtin.debug:
-    msg: "{{ wg_public }}\n{{ wg_private }}"
-
-- name: Debug
-  ansible.builtin.debug:
-    msg: "{{ groups['k3s'] | map('extract', hostvars, 'wg_private') }}"
-
 - name: Find all k3s hostvars
   ansible.builtin.set_fact:
     k3s_hostvars: "{{ groups['k3s'] | map('extract', hostvars) | jonsible.iac.mapattributes(['ansible_nodename', 'wg_public']) }}"
-
-- name: Debug
-  ansible.builtin.debug:
-    msg: "{{ item.ansible_nodename }}"
-  loop: "{{ k3s_hostvars }}"
-  when: item.ansible_nodename != ansible_nodename
 
 - name: Create wireguard configuration (netplan)
   become: true

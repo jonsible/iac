@@ -1,11 +1,24 @@
 # code: language=ansible
-- name: Allow kube API (wireguard)
+- name: Create wireguard chain
+  become: true
+  ansible.builtin.iptables:
+    chain: WG-INPUT
+    chain_management: true
+
+- name: Add wireguard chain to input chain
   become: true
   ansible.builtin.iptables:
     table: filter
     chain: INPUT
     in_interface: "{{ wg_if }}"
-    source: "{{ wg_network }}"
+    jump: WG-INPUT
+    action: append
+
+- name: Allow kube API (wireguard)
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: WG-INPUT
     protocol: tcp
     destination_port: "6443"
     jump: ACCEPT
@@ -18,9 +31,7 @@
   become: true
   ansible.builtin.iptables:
     table: filter
-    chain: INPUT
-    in_interface: "{{ wg_if }}"
-    source: "{{ wg_network }}"
+    chain: WG-INPUT
     protocol: tcp
     destination_port: "2379:2380"
     jump: ACCEPT
@@ -33,9 +44,7 @@
   become: true
   ansible.builtin.iptables:
     table: filter
-    chain: INPUT
-    in_interface: "{{ wg_if }}"
-    source: "{{ wg_network }}"
+    chain: WG-INPUT
     protocol: tcp
     destination_port: "10250"
     jump: ACCEPT
