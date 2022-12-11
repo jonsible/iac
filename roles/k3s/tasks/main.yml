@@ -94,6 +94,16 @@
     - not k3s_kubeconfig.stat.exists
     - ansible_nodename == k3s_init_node
 
+- name: Wait for first node to be up
+  any_errors_fatal: true
+  ansible.builtin.uri:
+    url: "https://{{ k3s_init_node_ip }}:6443"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 5
+
 - name: Join cluster
   become: true
   any_errors_fatal: true
