@@ -55,8 +55,6 @@
     owner: root
     group: root
     mode: 0600
-  notify:
-    - "k3s-restart"
 
 - name: Check if k3s is already installed
   become: true
