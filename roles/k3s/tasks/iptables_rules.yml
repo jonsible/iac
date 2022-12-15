@@ -78,7 +78,7 @@
     chain: PREROUTING
     protocol: "{{ item }}"
     source: "{{ wg_network }}"
-    destination: "{{ wg_if }}"
+    in_interface: "{{ wg_if }}"
     destination_port: "53"
     jump: REDIRECT
     to_ports: "30053"
@@ -95,7 +95,7 @@
     table: filter
     chain: WG-INPUT
     protocol: "{{ item }}"
-    destination: "{{ wg_if }}"
+    in_interface: "{{ wg_if }}"
     destination_port: "53"
     jump: ACCEPT
     comment: "Allow DNS (wireguard)"
@@ -112,7 +112,7 @@
     table: filter
     chain: WG-INPUT
     protocol: "{{ item }}"
-    destination: "{{ wg_if }}"
+    in_interface: "{{ wg_if }}"
     destination_port: "30053"
     jump: ACCEPT
     comment: "Allow DNS (nodeport)"
