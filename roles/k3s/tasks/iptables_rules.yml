@@ -4,6 +4,8 @@
   ansible.builtin.iptables:
     chain: WG-INPUT
     chain_management: true
+  notify:
+    - "iptables-save"
 
 - name: Add wireguard chain to input chain
   become: true
@@ -13,6 +15,8 @@
     in_interface: "{{ wg_if }}"
     jump: WG-INPUT
     action: append
+  notify:
+    - "iptables-save"
 
 - name: Allow kube API (wireguard)
   become: true
@@ -63,5 +67,58 @@
     jump: ACCEPT
     comment: "Flannel Wireguard"
     action: insert
+  notify:
+    - "iptables-save"
+
+- name: Forward external DNS port
+  become: true
+  ansible.builtin.iptables:
+    table: nat
+    action: insert
+    chain: PREROUTING
+    protocol: "{{ item }}"
+    source: "{{ wg_network }}"
+    destination: "{{ wg_if }}"
+    destination_port: "53"
+    jump: REDIRECT
+    to_ports: "30053"
+    comment: "Forward DNS to NodePort 30053"
+  loop:
+    - udp
+    - tcp
+  notify:
+    - "iptables-save"
+
+- name: Allow DNS (wireguard)
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: WG-INPUT
+    protocol: "{{ item }}"
+    destination: "{{ wg_if }}"
+    destination_port: "53"
+    jump: ACCEPT
+    comment: "Allow DNS (wireguard)"
+    action: insert
+  loop:
+    - udp
+    - tcp
+  notify:
+    - "iptables-save"
+
+- name: Allow DNS (nodeport)
+  become: true
+  ansible.builtin.iptables:
+    table: filter
+    chain: WG-INPUT
+    protocol: "{{ item }}"
+    destination: "{{ wg_if }}"
+    destination_port: "30053"
+    jump: ACCEPT
+    comment: "Allow DNS (nodeport)"
+    action: insert
+  loop:
+    - udp
+    - tcp
   notify:
     - "iptables-save"
