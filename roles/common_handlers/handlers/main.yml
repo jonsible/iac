@@ -4,8 +4,8 @@
   become: true
   ansible.builtin.shell:
     cmd: |
-      iptables-save | grep -vP "^-A (CNI|KUBE|FLANNEL)" | tee /etc/iptables/rules.v4
-      ip6tables-save | grep -vP "^-A (CNI|KUBE|FLANNEL)" | tee /etc/iptables/rules.v6
+      iptables-save | grep -vP "^-A (CNI|KUBE|FLANNEL)" | grep -vP "^:(CNI|KUBE|FLANNEL)" | tee /etc/iptables/rules.v4
+      ip6tables-save | grep -vP "^-A (CNI|KUBE|FLANNEL)" | grep -vP "^:(CNI|KUBE|FLANNEL)" | tee /etc/iptables/rules.v6
   listen: "iptables-save"
 
 - name: Restart iptables
