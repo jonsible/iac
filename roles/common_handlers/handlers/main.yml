@@ -2,8 +2,10 @@
 # code: language=ansible
 - name: Save iptables
   become: true
-  ansible.builtin.command:
-    cmd: "netfilter-persistent save"
+  ansible.builtin.shell:
+    cmd: |
+      iptables-save | grep -vP "^-A (KUBE|FLANNEL)" | grep -vP "^:(KUBE|FLANNEL)" | tee /etc/iptables/rules.v4
+      ip6tables-save | grep -vP "^-A (KUBE|FLANNEL)" | grep -vP "^:(KUBE|FLANNEL)" | tee /etc/iptables/rules.v6
   listen: "iptables-save"
 
 - name: Restart iptables
