@@ -83,6 +83,7 @@
     jump: REDIRECT
     to_ports: "30053"
     comment: "Forward DNS to NodePort 30053"
+    state: absent
   loop:
     - udp
     - tcp
@@ -117,6 +118,7 @@
     jump: ACCEPT
     comment: "Allow DNS (nodeport)"
     action: insert
+    state: absent
   loop:
     - udp
     - tcp
