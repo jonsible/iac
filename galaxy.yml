@@ -5,10 +5,13 @@ version: 0.0.1
 readme: README.md
 authors:
   - "Jonathan Scherrer <jonathan.s.scherrer@gmail.com>"
-license_file: 'LICENSE'
+license_file: "LICENSE"
 repository: https://github.com/jonsible/iac
 issues: https://github.com/jonsible/iac/issues
 
 tags: []
-dependencies: {}
+dependencies:
+  "community.general": "*"
+  "community.libvirt": "*"
+  "ansible.posix": "*"
 build_ignore: []
