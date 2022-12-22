@@ -27,6 +27,9 @@
   ansible.builtin.import_tasks: fail2ban.yml
   when: machine_type == "bare"
 
+- name: Setup ipset
+  ansible.builtin.import_tasks: ipset.yml
+
 - name: Setup iptables
   ansible.builtin.import_tasks: iptables.yml
 

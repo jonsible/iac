@@ -1,0 +1,20 @@
+# code: language=ansible
+
+- name: "Install ipset and ipset-persistent"
+  become: true
+  ansible.builtin.apt:
+    name:
+      - ipset
+      - ipset-persistent
+    state: present
+  tags:
+    - ipset
+
+- name: "Start and enable ipset service"
+  become: true
+  ansible.builtin.systemd:
+    name: ipset
+    state: started
+    enabled: true
+  tags:
+    - ipset

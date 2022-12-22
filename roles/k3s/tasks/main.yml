@@ -14,8 +14,15 @@
       - k3s_token != ""
     fail_msg: "k3s_token not set"
 
+- name: Configure ipsets
+  ansible.builtin.import_tasks: ipsets.yml
+  tags:
+    - ipsets
+
 - name: Set iptables rules
   ansible.builtin.import_tasks: iptables_rules.yml
+  tags:
+    - iptables
 
 - name: Enable IPv4 forwarding
   become: true

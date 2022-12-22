@@ -1,0 +1,34 @@
+# code: language=ansible
+
+- name: Add failover IPs to ipset
+  become: true
+  jonsible.iac.ipset:
+    name: failover
+    type: hash:ip
+    entry: "{{ hostvars[item]['failover'] }}"
+  loop: "{{ ansible_play_hosts_all }}"
+  notify: ipset-save
+  tags:
+    - ipset
+
+- name: Add main IPs to ipset
+  become: true
+  jonsible.iac.ipset:
+    name: main
+    type: hash:ip
+    entry: "{{ hostvars[item]['ansible_facts']['default_ipv4']['address'] }}"
+  loop: "{{ ansible_play_hosts_all }}"
+  notify: ipset-save
+  tags:
+    - ipset
+
+- name: Add cloudflare IPs to ipset
+  become: true
+  jonsible.iac.ipset:
+    name: cloudflare
+    type: hash:net
+    entry: "{{ item }}"
+  loop: "{{ q('ansible.builtin.url', 'https://www.cloudflare.com/ips-v4') }}"
+  notify: ipset-save
+  tags:
+    - ipset

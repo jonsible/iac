@@ -1,13 +1,18 @@
 # code: language=ansible
-- name: Create wireguard chain
+
+- name: Create chains
   become: true
   ansible.builtin.iptables:
-    chain: WG-INPUT
+    chain: "{{ item }}"
     chain_management: true
+  loop:
+    - WG-INPUT
+    - FAILOVER-INPUT
+    - MAIN-INPUT
   notify:
     - "iptables-save"
 
-- name: Add wireguard chain to input chain
+- name: Traffic to wireguard IP goes to WG-INPUT
   become: true
   ansible.builtin.iptables:
     table: filter
@@ -18,44 +23,61 @@
   notify:
     - "iptables-save"
 
-- name: Allow kube API (wireguard)
+- name: Traffic to failover IPs goes to FAILOVER-INPUT
   become: true
   ansible.builtin.iptables:
     table: filter
-    chain: WG-INPUT
-    protocol: tcp
-    destination_port: "6443"
-    jump: ACCEPT
-    comment: "kube API server"
+    chain: INPUT
+    match_set: failover
+    match_set_flags: dst
+    jump: FAILOVER-INPUT
     action: insert
   notify:
     - "iptables-save"
 
-- name: Allow etcd (wireguard)
+- name: Traffic to main IPs goes to MAIN-INPUT
   become: true
   ansible.builtin.iptables:
     table: filter
-    chain: WG-INPUT
-    protocol: tcp
-    destination_port: "2379:2380"
-    jump: ACCEPT
-    comment: "etcd"
+    chain: INPUT
+    match_set: main
+    match_set_flags: dst
+    jump: MAIN-INPUT
     action: insert
   notify:
     - "iptables-save"
 
-- name: Allow kubelet metrics (wireguard)
+- name: Allow traffic on wireguard interface
   become: true
   ansible.builtin.iptables:
     table: filter
     chain: WG-INPUT
-    protocol: tcp
-    destination_port: "10250"
+    destination_port: "{{ item.destination_port }}"
+    protocol: "{{ item.protocol }}"
+    comment: "{{ item.comment }}"
     jump: ACCEPT
-    comment: "kubelet metrics"
     action: insert
   notify:
     - "iptables-save"
+  loop:
+    - protocol: tcp
+      destination_port: 6443
+      comment: "Allow kube API"
+    - protocol: tcp
+      destination_port: 2379:2380
+      comment: "Allow etcd"
+    - protocol: tcp
+      destination_port: 10250
+      comment: "Allow kubelet metrics"
+    - protocol: tcp
+      destination_port: 443
+      comment: "Allow HTTPS"
+    - protocol: tcp
+      destination_port: 53
+      comment: "Allow DNS"
+    - protocol: udp
+      destination_port: 53
+      comment: "Allow DNS"
 
 - name: Allow flannel wireguard
   become: true
@@ -70,19 +92,17 @@
   notify:
     - "iptables-save"
 
-- name: Allow DNS (wireguard)
+- name: Allow HTTPS from Cloudflare
   become: true
   ansible.builtin.iptables:
     table: filter
-    chain: WG-INPUT
-    protocol: "{{ item }}"
-    in_interface: "{{ wg_if }}"
-    destination_port: "53"
+    chain: FAILOVER-INPUT
+    protocol: tcp
+    destination_port: 443
     jump: ACCEPT
-    comment: "Allow DNS (wireguard)"
+    comment: "Allow HTTPS from Cloudflare"
+    match_set: cloudflare
+    match_set_flags: src
     action: insert
-  loop:
-    - udp
-    - tcp
   notify:
     - "iptables-save"

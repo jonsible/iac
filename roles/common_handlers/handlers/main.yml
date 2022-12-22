@@ -47,3 +47,9 @@
     name: systemd-networkd
     state: restarted
   listen: "systemd-networkd-restart"
+
+- name: Save ipset
+  become: true
+  ansible.builtin.shell:
+    cmd: ipset save > /etc/iptables/ipsets
+  listen: "ipset-save"
